@@ -1,0 +1,139 @@
+openapi: 3.0.0
+info:
+  title: Survey API
+  description: Simple API for survey management
+  version: 1.0.0
+
+servers:
+  - url: http://127.0.0.1:9000
+    description: Local development server
+
+paths:
+  /questions:
+    get:
+      summary: Get all survey questions
+      operationId: getQuestions
+      tags:
+        - Questions
+      responses:
+        '200':
+          description: List of survey questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+        '500':
+          description: Internal server error
+
+  /answers:
+    post:
+      summary: Submit survey answers
+      operationId: submitAnswers
+      tags:
+        - Answers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+              example:
+                q1: "John Doe"
+                q2: "25"
+                q3: "5"
+                q4: "Content quality"
+                q5: "Yes"
+      responses:
+        '200':
+          description: Answers received successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionResponse'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    Question:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique question identifier
+          example: "q1"
+        text:
+          type: string
+          description: Question text
+          example: "Как вас зовут?"
+        type:
+          type: string
+          enum:
+            - text
+            - radio
+          description: Question type
+          example: "text"
+        options:
+          type: array
+          items:
+            type: string
+          description: Answer options (for radio type)
+          example: ["Да", "Нет", "Возможно"]
+      required:
+        - id
+        - text
+        - type
+        - options
+
+    Submission:
+      type: object
+      properties:
+        submission_id:
+          type: string
+          description: Unique submission identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        answers:
+          type: object
+          additionalProperties:
+            type: string
+          description: Map of question ID to answer
+          example:
+            q1: "John Doe"
+            q2: "25"
+        submitted_at:
+          type: string
+          format: date-time
+          description: Submission timestamp
+          example: "2024-01-15T10:30:00Z"
+      required:
+        - submission_id
+        - answers
+        - submitted_at
+
+    SubmissionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Спасибо за ответы!"
+        submission:
+          $ref: '#/components/schemas/Submission'
+      required:
+        - success
+        - message
